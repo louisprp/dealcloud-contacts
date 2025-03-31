@@ -1,101 +1,254 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import React from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+import { Contact } from "@/lib/schema"
+import { cn } from "@/lib/utils"
+import { useDefaultReactTable } from "@/hooks/use-default-react-table"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { columns } from "@/components/contacts/columns"
+import { DataTable } from "@/components/data-table/data-table"
+import { DataTablePagination } from "@/components/data-table/data-table-pagination"
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
+import { InputCard } from "@/components/input-card"
+
+import {
+  extractCompanyNames,
+  fetchCompanies,
+  fetchContacts,
+  generateContacts,
+  insertContacts,
+} from "./actions"
+
+export default function Page() {
+  // Store the contact data in state.
+  const [data, setData] = React.useState<Contact[]>([])
+  const [inputText, setInputText] = React.useState("")
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [progress, setProgress] = React.useState(0)
+  const [loadingStatus, setLoadingStatus] = React.useState("")
+  const [contacts, setContacts] = React.useState<
+    Array<Contact & { isDuplicate: boolean }>
+  >([])
+  const [showDialog, setShowDialog] = React.useState(false)
+
+  const queryClient = useQueryClient()
+
+  const handleGenerateContacts = async () => {
+    try {
+      setIsLoading(true)
+      setProgress(0)
+      setLoadingStatus("Extracting company names...")
+
+      // Step 1: Extract company names
+      const companyNames = await extractCompanyNames(inputText)
+      if (companyNames?.serverError) throw new Error(companyNames.serverError)
+
+      setProgress(33)
+      setLoadingStatus("Fetching companies...")
+
+      // Step 2: Fetch companies
+      const companies = await fetchCompanies(companyNames?.data)
+      if (companies?.serverError) throw new Error(companies.serverError)
+
+      queryClient.setQueryData<Record<string, string>>(
+        ["employers"],
+        (oldData = {}) => {
+          const newData = { ...oldData }
+          companies?.data.forEach((emp) => {
+            newData[emp.EntryId] = emp.CompanyName
+          })
+          return newData
+        }
+      )
+
+      setProgress(66)
+      setLoadingStatus("Generating contacts...")
+
+      // Step 3: Generate contacts
+      const contacts = await generateContacts(
+        `${inputText} + ${JSON.stringify(companies?.data)}`
+      )
+      if (contacts?.serverError) throw new Error(contacts.serverError)
+
+      setProgress(100)
+      setLoadingStatus("Done")
+
+      setData(contacts?.data)
+    } catch (error) {
+      toast.error("Error", { description: (error as Error).message })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const checkEmails = async () => {
+    try {
+      setIsLoading(true)
+
+      const dbContacts = await fetchContacts(
+        data.map((contact) => contact.Email)
+      )
+      if (dbContacts?.serverError) throw new Error(dbContacts.serverError)
+      const dbEmails = new Set(
+        (dbContacts?.data ?? []).map((contact) => contact.Email)
+      )
+
+      const contacts = data.map((contact) => ({
+        ...contact,
+        isDuplicate: dbEmails.has(contact.Email),
+      }))
+
+      setContacts(contacts)
+      setShowDialog(true)
+    } catch (error) {
+      toast.error("Error", { description: (error as Error).message })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleContinue = async () => {
+    setShowDialog(false)
+    setIsLoading(true)
+    try {
+      // Exclude duplicates from current data
+      const filteredContacts = contacts.filter((x) => !x.isDuplicate)
+      // Call the server action to insert the filtered contacts
+      const result = await insertContacts(filteredContacts)
+      console.log("Insert result:", result)
+      toast.success("Success", {
+        description: "Contacts have been inserted.",
+      })
+    } catch (error) {
+      console.error("Error inserting contacts:", error)
+      toast.error("Error", {
+        description:
+          (error as Error).message || "An unexpected error occurred.",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Create the table instance with our default settings and meta update function.
+  const table = useDefaultReactTable<Contact, unknown>({
+    data: data,
+    columns,
+    meta: {
+      updateData: (rowIndex, columnId, value) => {
+        setData((prevData) =>
+          prevData.map((row, index) => {
+            if (index === rowIndex) {
+              return {
+                ...row,
+                [columnId]: value,
+              }
+            }
+            return row
+          })
+        )
+      },
+    },
+  })
+
+  if (data.length > 0) {
+    return (
+      <div className="min-h-[100dvh] w-full p-8">
+        <h2 className="text-2xl font-bold mb-4">Contacts</h2>
+        <div className="space-y-4">
+          {/* Render the toolbar */}
+          <DataTableToolbar table={table} />
+          {/* Render the table content */}
+          <DataTable table={table} />
+          {/* Render the pagination controls */}
+          <DataTablePagination table={table} />
+
+          <div className="gap-4 flex items-center">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setData([])
+                setContacts([])
+              }}
+            >
+              Go back
+            </Button>
+            <Button onClick={() => checkEmails()}>
+              <span className="flex items-center space-x-2">
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                <span>Continue</span>
+              </span>
+            </Button>
+          </div>
+
+          {showDialog && (
+            <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Contact Submission Overview
+                  </AlertDialogTitle>
+                  <div className="text-sm text-muted-foreground">
+                    Below is the list of contacts to be submitted:
+                    <pre className="mb-4 mt-6 max-h-[350px] whitespace-pre overflow-x-auto rounded-xl bg-muted">
+                      <code className="rounded px-[0.3rem] py-[0.2rem] font-mono text-sm">
+                        {contacts.map(({ Email, isDuplicate }, index) => (
+                          <span
+                            key={index}
+                            className={cn(
+                              "line",
+                              isDuplicate && "text-destructive"
+                            )}
+                          >
+                            {isDuplicate ? `- ${Email}` : `+ ${Email}`}
+                          </span>
+                        ))}
+                      </code>
+                    </pre>
+                    <span className="block mt-2">
+                      If you continue, duplicates (marked in red) will be
+                      skipped.
+                    </span>
+                  </div>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleContinue}>
+                    Submit
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-[100dvh] w-full flex justify-center">
+      <InputCard
+        inputText={inputText}
+        onInputChange={setInputText}
+        isLoading={isLoading}
+        progress={progress}
+        loadingStatus={loadingStatus}
+        onGenerate={handleGenerateContacts}
+      />
+      {/* <button onClick={() => loadDummyData()}>Dummy Data</button> */}
     </div>
-  );
+  )
 }
