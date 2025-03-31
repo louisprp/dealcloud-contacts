@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🤖 AI Contact Creator for DealCloud
 
-## Getting Started
+A Next.js 15 web app for effortlessly transforming raw, unstructured contact lists into clean, structured contacts ready for import into DealCloud CRM — powered by Google Gemini 2.0 Flash Lite and the Vercel AI SDK.
 
-First, run the development server:
+## ✨ Features
+
+- ⚡️ Paste in unstructured contact info (from Excel, Notepad, etc.)
+- 🧠 Google Gemini 2.0 Flash Lite extracts relevant company names
+- 🔍 Automatically fetches DealCloud company IDs
+- 🧬 AI parses and structures contact details:
+  - First Name / Last Name
+  - Gender
+  - Email
+  - Phone
+  - Contact Type & Job Title
+  - Employer
+- 🔁 Checks for duplicate contacts in your CRM
+- ✅ Provides a diff-style preview before insertion
+- 📬 Seamlessly inserts only new, clean contact records into DealCloud
+
+## 🛠️ Tech Stack
+
+| Tech | Description |
+|------|-------------|
+| [Next.js 15 (App Router)](https://nextjs.org/docs) | React framework for server-rendered apps |
+| [Tailwind CSS 4.0](https://tailwindcss.com/) | Utility-first styling |
+| [shadcn/ui](https://ui.shadcn.com/) | Accessible and beautiful UI components |
+| [Vercel AI SDK](https://sdk.vercel.ai/docs) | Handles LLM interactions |
+| [Google Gemini 2.0 Flash Lite](https://deepmind.google/technologies/gemini/) | Powers AI contact parsing |
+| [TanStack Table](https://tanstack.com/table) | Powerful data table rendering |
+
+---
+
+## 📹 Demo
+
+> 🎥 _A short demo video will go here soon..._
+
+<!-- Replace the link below with your video when ready -->
+<!-- ![Demo](demo-video-placeholder.gif) -->
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the Repository
 
 ```bash
-npm run dev
+git clone https://github.com/your-username/dealcloud-ai-contact-creator.git
+cd dealcloud-ai-contact-creator
+```
+
+### 2. Install Dependencies
+
+```bash
+pnpm install
 # or
-yarn dev
-# or
+npm install
+```
+
+### 3. Set Up Environment Variables
+
+Create a `.env.local` file:
+
+```env
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key_here
+DEALCLOUD_SITE=your_site_key_here
+DEALCLOUD_CLIENT_ID=your_client_id_here
+DEALCLOUD_CLIENT_SECRET=your_client_secret_here
+```
+
+> 🔐 Make sure not to commit sensitive API keys.
+
+### 4. Run the App
+
+```bash
 pnpm dev
 # or
-bun dev
+npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🧪 How It Works
 
-## Learn More
+1. **Paste Your Data**  
+   Drop in a messy list of contact info.
 
-To learn more about Next.js, take a look at the following resources:
+2. **AI Parsing**  
+   Gemini extracts structured fields and identifies company names.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Company Resolution**  
+   Fetches internal DealCloud company IDs using the company names.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Contact Generation**  
+   Fills in all required contact fields. Infers missing ones when possible.
 
-## Deploy on Vercel
+5. **Duplication Check**  
+   Existing contacts are filtered out to avoid duplication.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+6. **Review & Confirm**  
+   See a diff-style preview of new contacts to be created.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+7. **Insert**  
+   Clean, deduplicated contacts are inserted into DealCloud.
+
+---
+
+## 📄 License
+
+MIT © [Your Name or Org]
