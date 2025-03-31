@@ -33,10 +33,9 @@ A Next.js 15 web app for effortlessly transforming raw, unstructured contact lis
 
 ## 📹 Demo
 
-> 🎥 _A short demo video will go here soon..._
+> 🎥 _A short demo video..._
 
-<!-- Replace the link below with your video when ready -->
-<!-- ![Demo](demo-video-placeholder.gif) -->
+https://github.com/user-attachments/assets/0b069945-1282-4d94-824c-785bcde66b3d
 
 ---
 
@@ -109,4 +108,4 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## 📄 License
 
-MIT © [Your Name or Org]
+MIT © louisprp
