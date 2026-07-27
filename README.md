@@ -1,24 +1,24 @@
-# 🤖 AI Contact Creator for DealCloud
+# AI Contact Creator for DealCloud
 
 A Next.js 15 web app for effortlessly transforming raw, unstructured contact lists into clean, structured contacts ready for import into DealCloud CRM — powered by Google Gemini 2.0 Flash Lite and the Vercel AI SDK.
 
-## ✨ Features
+## Features
 
-- ⚡️ Paste in unstructured contact info (from Excel, Notepad, etc.)
-- 🧠 Google Gemini 2.0 Flash Lite extracts relevant company names
-- 🔍 Automatically fetches DealCloud company IDs
-- 🧬 AI parses and structures contact details:
+- Paste in unstructured contact info (from Excel, Notepad, etc.)
+- Google Gemini 2.0 Flash Lite extracts relevant company names
+- Automatically fetches DealCloud company IDs
+- AI parses and structures contact details:
   - First Name / Last Name
   - Gender
   - Email
   - Phone
   - Contact Type & Job Title
   - Employer
-- 🔁 Checks for duplicate contacts in your CRM
-- ✅ Provides a diff-style preview before insertion
-- 📬 Seamlessly inserts only new, clean contact records into DealCloud
+- Checks for duplicate contacts in your CRM
+- Provides a diff-style preview before insertion
+- Seamlessly inserts only new, clean contact records into DealCloud
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Tech | Description |
 |------|-------------|
@@ -31,15 +31,15 @@ A Next.js 15 web app for effortlessly transforming raw, unstructured contact lis
 
 ---
 
-## 📹 Demo
+## Demo
 
-> 🎥 _A short demo video..._
+A short demo video:
 
 https://github.com/user-attachments/assets/0b069945-1282-4d94-824c-785bcde66b3d
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the Repository
 
@@ -67,7 +67,7 @@ DEALCLOUD_CLIENT_ID=your_client_id_here
 DEALCLOUD_CLIENT_SECRET=your_client_secret_here
 ```
 
-> 🔐 Make sure not to commit sensitive API keys.
+> Make sure not to commit sensitive API keys.
 
 ### 4. Run the App
 
@@ -81,7 +81,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ---
 
-## 🧪 How It Works
+## How It Works
 
 1. **Paste Your Data**  
    Drop in a messy list of contact info.
@@ -106,6 +106,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ---
 
-## 📄 License
+## License
 
 MIT © louisprp
